@@ -22,7 +22,7 @@ export default StyleSheet.create({
   header: {
     backgroundColor: colors.primary,
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 16,
     paddingBottom: 20,
   },
   headerTitle: {
@@ -93,6 +93,19 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   buttonDangerText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  buttonSuccess: {
+    backgroundColor: colors.success,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonSuccessText: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',

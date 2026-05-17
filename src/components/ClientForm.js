@@ -26,6 +26,7 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
   const [valor, setValor] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('avista');
   const [dataPagamento, setDataPagamento] = useState('');
+  const [parcelas, setParcelas] = useState('1');
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -35,6 +36,7 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
       setValor(String(editingClient.valor));
       setFormaPagamento(editingClient.formaPagamento);
       setDataPagamento(editingClient.dataPagamento);
+      setParcelas('1');
     } else {
       resetForm();
     }
@@ -46,6 +48,7 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
     setValor('');
     setFormaPagamento('avista');
     setDataPagamento('');
+    setParcelas('1');
     setErrors({});
   };
 
@@ -57,6 +60,11 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
       newErrors.valor = 'Valor inválido';
     if (!dataPagamento.trim())
       newErrors.dataPagamento = 'Data é obrigatória';
+    if (formaPagamento === 'divida') {
+      const p = Number(parcelas);
+      if (!Number.isInteger(p) || p < 1)
+        newErrors.parcelas = 'Número de parcelas inválido';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,6 +77,7 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
       valor: Number(valor),
       formaPagamento,
       dataPagamento: dataPagamento.trim(),
+      parcelas: formaPagamento === 'divida' ? Number(parcelas) : 1,
     });
     resetForm();
   };
@@ -226,6 +235,35 @@ const ClientForm = ({ visible, onClose, onSubmit, editingClient }) => {
               value={formaPagamento}
               onSelect={setFormaPagamento}
             />
+
+            {formaPagamento === 'divida' && (
+              <>
+                <Text style={styles.label}>Parcelas</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.parcelas && { borderColor: colors.danger },
+                  ]}
+                  placeholder="Número de parcelas"
+                  placeholderTextColor={colors.textSecondary}
+                  value={parcelas}
+                  onChangeText={setParcelas}
+                  keyboardType="number-pad"
+                />
+                {errors.parcelas && (
+                  <Text
+                    style={{
+                      color: colors.danger,
+                      fontSize: 12,
+                      marginTop: -8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {errors.parcelas}
+                  </Text>
+                )}
+              </>
+            )}
 
             <Text style={styles.label}>Data do Pagamento</Text>
             <TextInput

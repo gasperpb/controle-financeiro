@@ -10,7 +10,8 @@ const getTipoGastoLabel = (value) => {
   return map[value] || value;
 };
 
-const getFormaPagamentoLabel = (value) => {
+const getFormaPagamentoLabel = (value, pago) => {
+  if (value === 'divida' && pago) return 'Pago';
   const map = { avista: 'À Vista', divida: 'Dívida Pendente' };
   return map[value] || value;
 };
@@ -19,8 +20,9 @@ const formatCurrency = (value) => {
   return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
 };
 
-const ClientCard = ({ client, onEdit, onDelete }) => {
+const ClientCard = ({ client, onEdit, onDelete, onMarkAsPaid }) => {
   const isDivida = client.formaPagamento === 'divida';
+  const isPago = client.pago === true;
 
   return (
     <View style={styles.card}>
@@ -96,7 +98,9 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
                 style={[
                   styles.badge,
                   {
-                    backgroundColor: isDivida
+                    backgroundColor: isPago
+                      ? '#e6f4ea'
+                      : isDivida
                       ? '#fce8e6'
                       : '#e6f4ea',
                   },
@@ -106,10 +110,17 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
                   style={{
                     fontSize: 12,
                     fontWeight: '600',
-                    color: isDivida ? colors.danger : colors.success,
+                    color: isPago
+                      ? colors.success
+                      : isDivida
+                      ? colors.danger
+                      : colors.success,
                   }}
                 >
-                  {getFormaPagamentoLabel(client.formaPagamento)}
+                  {getFormaPagamentoLabel(
+                    client.formaPagamento,
+                    isPago
+                  )}
                 </Text>
               </View>
             </View>
@@ -130,6 +141,52 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
                 {client.dataPagamento}
               </Text>
             </View>
+
+            {client.parcelaInfo && (
+              <View style={styles.row}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    width: 100,
+                  }}
+                >
+                  Parcela:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: colors.primary,
+                  }}
+                >
+                  {client.parcelaInfo.atual}/{client.parcelaInfo.total}
+                </Text>
+              </View>
+            )}
+
+            {isPago && client.dataPagamentoRealizado && (
+              <View style={styles.row}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    width: 100,
+                  }}
+                >
+                  Pago em:
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: colors.success,
+                  }}
+                >
+                  {client.dataPagamentoRealizado}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -145,6 +202,14 @@ const ClientCard = ({ client, onEdit, onDelete }) => {
           borderTopColor: colors.border,
         }}
       >
+        {isDivida && !isPago && (
+          <TouchableOpacity
+            style={styles.buttonSuccess}
+            onPress={() => onMarkAsPaid(client)}
+          >
+            <Text style={styles.buttonSuccessText}>Dar Baixa</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={styles.buttonOutline}
           onPress={() => onEdit(client)}
