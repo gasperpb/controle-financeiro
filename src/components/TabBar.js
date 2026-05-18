@@ -15,7 +15,7 @@ const TabBar = ({ activeTab, onTabChange }) => {
         flexDirection: 'row',
         backgroundColor: colors.primary,
         paddingHorizontal: 16,
-        paddingBottom: 8,
+        paddingVertical: 8,
         gap: 4,
       }}
     >

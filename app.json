@@ -14,12 +14,16 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.controlefinanceiro.app",
       "adaptiveIcon": {
         "backgroundColor": "#1a73e8"
       }
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }

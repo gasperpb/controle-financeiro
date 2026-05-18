@@ -5,6 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import styles, { colors } from '../styles/global';
 import ClientCard from '../components/ClientCard';
@@ -17,6 +19,7 @@ import {
   updateClient,
   deleteClient,
   filterClients,
+  getVendas,
 } from '../utils/storage';
 
 const HomeScreen = () => {
@@ -24,6 +27,7 @@ const HomeScreen = () => {
   const [filter, setFilter] = useState('todas');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [vendasCliente, setVendasCliente] = useState(null);
 
   const filteredClients = filterClients(filter);
   const totalDividas = clients
@@ -32,6 +36,16 @@ const HomeScreen = () => {
   const totalAvista = clients
     .filter((c) => c.formaPagamento === 'avista')
     .reduce((acc, c) => acc + c.valor, 0);
+
+  const allVendas = getVendas();
+  const vendasPorCliente = {};
+  allVendas.forEach((v) => {
+    if (v.clienteId) {
+      if (!vendasPorCliente[v.clienteId])
+        vendasPorCliente[v.clienteId] = [];
+      vendasPorCliente[v.clienteId].push(v);
+    }
+  });
 
   useEffect(() => {
     initStorage().then(() => setClients([...getClients()]));
@@ -129,14 +143,28 @@ const HomeScreen = () => {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <ClientCard
-      client={item}
-      onEdit={openEdit}
-      onDelete={handleDelete}
-      onMarkAsPaid={handleMarkAsPaid}
-    />
-  );
+  const openVendasCliente = (client) => {
+    setVendasCliente({ client, vendas: vendasPorCliente[client.id] || [] });
+  };
+
+  const renderItem = ({ item }) => {
+    const vendasDoCliente = vendasPorCliente[item.id] || [];
+    const totalGasto = vendasDoCliente.reduce(
+      (acc, v) => acc + v.total,
+      0
+    );
+    return (
+      <ClientCard
+        client={item}
+        onEdit={openEdit}
+        onDelete={handleDelete}
+        onMarkAsPaid={handleMarkAsPaid}
+        vendasCount={vendasDoCliente.length}
+        vendasTotal={totalGasto}
+        onViewSales={openVendasCliente}
+      />
+    );
+  };
 
   const renderEmpty = () => (
     <Text style={styles.emptyText}>
@@ -148,14 +176,6 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Controle Financeiro</Text>
-        <Text style={styles.headerSubtitle}>
-          {clients.length} cliente{clients.length !== 1 ? 's' : ''}{' '}
-          cadastrado{clients.length !== 1 ? 's' : ''}
-        </Text>
-      </View>
-
       {clients.length > 0 && (
         <View
           style={{
@@ -275,6 +295,135 @@ const HomeScreen = () => {
         onSubmit={editingClient ? handleEdit : handleAdd}
         editingClient={editingClient}
       />
+
+      <Modal
+        visible={!!vendasCliente}
+        animationType="slide"
+        transparent
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              maxHeight: '80%',
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: 20,
+                paddingBottom: 0,
+              }}
+            >
+              <Text style={styles.sectionTitle}>
+                Vendas - {vendasCliente?.client?.nome}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setVendasCliente(null)}
+              >
+                <Text
+                  style={{
+                    color: colors.textSecondary,
+                    fontSize: 16,
+                  }}
+                >
+                  Fechar
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={{ padding: 20 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {vendasCliente?.vendas?.length > 0 ? (
+                vendasCliente.vendas.map((v) => (
+                  <View
+                    key={v.id}
+                    style={{
+                      backgroundColor: colors.inputBackground,
+                      borderRadius: 8,
+                      padding: 12,
+                      marginBottom: 10,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        marginBottom: 4,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontWeight: '600',
+                          color: colors.text,
+                        }}
+                      >
+                        {v.mercadoriaNome}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {v.data}
+                      </Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: colors.textSecondary,
+                          flex: 1,
+                        }}
+                      >
+                        {v.quantidade} un x{' '}
+                        {`R$ ${Number(v.precoUnitario).toFixed(2).replace('.', ',')}`}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '700',
+                          color: colors.success,
+                        }}
+                      >
+                        {`R$ ${Number(v.total).toFixed(2).replace('.', ',')}`}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    color: colors.textSecondary,
+                    padding: 30,
+                    fontSize: 14,
+                  }}
+                >
+                  Nenhuma venda encontrada para este cliente.
+                </Text>
+              )}
+              <View style={{ height: 30 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

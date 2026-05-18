@@ -20,7 +20,15 @@ const formatCurrency = (value) => {
   return `R$ ${Number(value).toFixed(2).replace('.', ',')}`;
 };
 
-const ClientCard = ({ client, onEdit, onDelete, onMarkAsPaid }) => {
+const ClientCard = ({
+  client,
+  onEdit,
+  onDelete,
+  onMarkAsPaid,
+  vendasCount = 0,
+  vendasTotal = 0,
+  onViewSales,
+}) => {
   const isDivida = client.formaPagamento === 'divida';
   const isPago = client.pago === true;
 
@@ -187,6 +195,35 @@ const ClientCard = ({ client, onEdit, onDelete, onMarkAsPaid }) => {
                 </Text>
               </View>
             )}
+
+            {vendasCount > 0 && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: 4,
+                  gap: 6,
+                }}
+              >
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: '#e8f0fe' },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: colors.primary,
+                    }}
+                  >
+                    {vendasCount} venda{vendasCount !== 1 ? 's' : ''}{' '}
+                    {formatCurrency(vendasTotal)}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -202,6 +239,14 @@ const ClientCard = ({ client, onEdit, onDelete, onMarkAsPaid }) => {
           borderTopColor: colors.border,
         }}
       >
+        {vendasCount > 0 && (
+          <TouchableOpacity
+            style={styles.buttonOutline}
+            onPress={() => onViewSales(client)}
+          >
+            <Text style={styles.buttonOutlineText}>Vendas</Text>
+          </TouchableOpacity>
+        )}
         {isDivida && !isPago && (
           <TouchableOpacity
             style={styles.buttonSuccess}
